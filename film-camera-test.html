@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나와 어울리는 필름카메라 찾기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-primary: #3B82F6;
+            --color-secondary: #6B7280;
+            --color-muted: #9CA3AF;
+            --color-border: #E5E7EB;
+            --color-surface: #F9FAFB;
+            --color-card: #FFFFFF;
+            --color-text: #111827;
+            --color-text-secondary: #6B7280;
+            --radius: 8px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-surface: #111827;
+                --color-card: #1F2937;
+                --color-border: #374151;
+                --color-text: #F3F4F6;
+                --color-text-secondary: #D1D5DB;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--color-text-secondary);
+            font-size: 14px;
+        }
+
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background-color: var(--color-border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--color-primary);
+            transition: width 0.3s ease;
+        }
+
+        .question-section {
+            margin-bottom: 2rem;
+        }
+
+        .question-section h2 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .answer-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .answer-btn {
+            padding: 12px 16px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            background-color: var(--color-card);
+            cursor: pointer;
+            font-size: 14px;
+            text-align: left;
+            transition: all 0.2s;
+            color: var(--color-text);
+        }
+
+        .answer-btn:hover {
+            border-color: var(--color-primary);
+            background-color: var(--color-surface);
+        }
+
+        .answer-btn:active {
+            transform: scale(0.98);
+        }
+
+        .results-container {
+            display: none;
+        }
+
+        .results-container.active {
+            display: block;
+        }
+
+        .buttons-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563EB;
+        }
+
+        .btn-secondary {
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--color-card);
+        }
+
+        .map-container {
+            background-color: var(--color-card);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .map-container h2 {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .map-svg {
+            width: 100%;
+            max-width: 320px;
+            height: auto;
+            background-color: var(--color-surface);
+            border-radius: var(--radius);
+        }
+
+        .map-legend {
+            margin-top: 1rem;
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .camera-card {
+            background-color: var(--color-card);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--color-border);
+        }
+
+        .camera-card.recommended {
+            border-left-color: var(--color-primary);
+        }
+
+        .camera-badge {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .camera-name {
+            font-size: 18px;
+            font-weight: 500;
+            margin: 0.5rem 0 0.25rem 0;
+        }
+
+        .camera-character {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .camera-oneline {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .camera-description {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+
+        .camera-strength {
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--color-border);
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .camera-strength strong {
+            color: var(--color-text);
+        }
+
+        .tip-box {
+            padding: 1rem;
+            background-color: var(--color-surface);
+            border-radius: var(--radius);
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .copied-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--color-primary);
+            color: white;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .copied-notification.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>나와 어울리는 필름카메라 찾기</h1>
+            <p>당신의 촬영 성향을 찾아 가장 맞는 필름카메라를 추천해드립니다</p>
+        </div>
+
+        <div id="quiz-section">
+            <div class="progress-container">
+                <div class="progress-text">
+                    <span id="progress-num">1 / 12</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="question-section">
+                <h2 id="question-text"></h2>
+                <div class="answer-options" id="answer-options"></div>
+            </div>
+        </div>
+
+        <div id="results-section" class="results-container">
+            <div class="buttons-row">
+                <button class="btn btn-primary" id="copy-btn">결과 링크 복사</button>
+                <button class="btn btn-secondary" id="restart-btn">다시 시작</button>
+            </div>
+
+            <div class="map-container">
+                <h2>필름카메라 성향 맵</h2>
+                <svg id="map-svg" class="map-svg" viewBox="0 0 320 320">
+                    <line x1="50" y1="270" x2="300" y2="270" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+                    <line x1="50" y1="30" x2="50" y2="270" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+                    <text x="175" y="295" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.5" font-weight="500">빠름 (Speed)</text>
+                    <text x="15" y="145" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.5" font-weight="500" transform="rotate(-90 15 145)">완벽성 (Perfect)</text>
+                </svg>
+                <div class="map-legend">
+                    <div>● 파란색: 추천 카메라</div>
+                    <div>● 회색: 다른 카메라</div>
+                    <div>★: 당신의 위치</div>
+                </div>
+            </div>
+
+            <div id="recommendations"></div>
+
+            <div class="tip-box">
+                💡 <strong>팁:</strong> 맵 위의 별(★)이 당신의 성향입니다. 파란 점들이 당신과 가장 가까운 카메라들입니다. 이 결과는 추천일 뿐, 정답은 아닙니다.
+            </div>
+        </div>
+    </div>
+
+    <div class="copied-notification" id="notification">결과 링크가 복사되었습니다!</div>
+
+    <script>
+        const questions = [
+            { q: "촬영할 때 나는?", left: "즉흥적으로", right: "계획하며", axis: 'speed' },
+            { q: "카메라는?", left: "자동으로 편하게", right: "수동으로 조절", axis: 'control' },
+            { q: "사진에서 중요한 건?", left: "감정과 분위기", right: "정확한 기술", axis: 'emotion' },
+            { q: "촬영 방식으로는?", left: "간단하고 빠르게", right: "세부사항까지 신경써", axis: 'simplicity' },
+            { q: "카메라 오류나 특수효과?", left: "자연스러운 매력", right: "피하고 싶음", axis: 'perfectionism' },
+            { q: "순간 포착할 때 나는?", left: "주머니에서 바로", right: "준비해서 정확히", axis: 'speed' },
+            { q: "무거운 카메라는?", left: "싫어", right: "좋아", axis: 'simplicity' },
+            { q: "카메라 선택 기준은?", left: "감정으로", right: "스펙으로", axis: 'emotion' },
+            { q: "새로운 기능 마주치면?", left: "그냥 시작", right: "먼저 배우고", axis: 'control' },
+            { q: "카메라 설정을 모를 때?", left: "기본값으로도 OK", right: "완벽히 이해하고 싶음", axis: 'control' },
+            { q: "한 번 촬영에서?", left: "여러 장 찍고 고르기", right: "신중하게 한두 장", axis: 'speed' },
+            { q: "사진의 매력은?", left: "예측 불가능한 톤", right: "재현 가능한 결과", axis: 'perfectionism' }
+        ];
+
+        const cameras = [
+            { name: 'Hasselblad 500C/M', character: '완벽주의자', oneline: '모든 프레임을 작품으로 만드는 당신', scores: { speed: 15, control: 70, emotion: 40, simplicity: 20, perfectionism: 95 }, description: '체계적인 촬영 프로세스. 다크 슬라이드를 빼고, 노출을 정확히 계산하고, 매뉴얼로 필름을 감는다. 모든 조작이 의도적이다.', strength: 'Zeiss 광학, 뛰어난 색감과 톤, 견고한 모듈식 구조' },
+            { name: 'Leica M6', character: '우아한 신사', oneline: '순간을 포착하되 항상 세련되게', scores: { speed: 85, control: 80, emotion: 70, simplicity: 75, perfectionism: 80 }, description: '직관적인 레인지파인더로 완전 기계식이면서도 배터리 없이 작동한다. 스트릿 포토그래퍼들의 첫 선택이자 역사적으로 가장 영향력 있는 카메라다.', strength: '뛰어난 브라이트라인 파인더, 빠른 작업 속도, 역사적 명성' },
+            { name: 'Nikon FM2', character: '성실한 노동자', oneline: '신뢰성과 표현력 모두를 가진 당신', scores: { speed: 60, control: 75, emotion: 50, simplicity: 60, perfectionism: 75 }, description: '견고하고 정직한 SLR. 군사용으로도 사용될 정도로 믿을 수 있고, 렌즈 교환으로 표현의 폭을 넓힐 수 있다.', strength: '완벽한 내구성, 직관적인 조작, 풍부한 렌즈' },
+            { name: 'Pentax K1000', character: '소박한 스승', oneline: '기본에 충실하고 깊이를 추구하는 당신', scores: { speed: 50, control: 60, emotion: 55, simplicity: 85, perfectionism: 65 }, description: '시작이 가장 좋은 카메라. 복잡하지 않아서 오히려 사진에 집중할 수 있다.', strength: '입문자 최적화, 심플한 설계, 저렴한 가격' },
+            { name: 'Yashica Electro 35', character: '친근한 동반자', oneline: '따뜻한 톤으로 감성을 담는 당신', scores: { speed: 80, control: 50, emotion: 80, simplicity: 75, perfectionism: 45 }, description: '자동 노출과 매뉴얼 포커스의 절충형. f/1.7 빠른 렌즈는 어두운 상황에 강하고, 따뜻하고 부드러운 톤이 특징이다.', strength: '따뜻한 톤, f/1.7 빠른 렌즈, 컴팩트한 휴대성' },
+            { name: 'Holga', character: '장난꾸러기', oneline: '완벽을 버리고 창의를 택한 당신', scores: { speed: 95, control: 15, emotion: 85, simplicity: 90, perfectionism: 10 }, description: '플라스틱 렌즈와 빛 누수가 만드는 예측 불가능함이 전부다. 모든 오류가 예술이 된다.', strength: '독특한 톤, 즉흥성, 완전한 대담함' },
+            { name: 'Mamiya RB67', character: '실용적 거장', oneline: '중형의 깊이를 원하는 신중한 당신', scores: { speed: 35, control: 85, emotion: 55, simplicity: 30, perfectionism: 85 }, description: '중형이지만 유연한 모듈식 설계다. 거의 모든 부품이 교환 가능해서 완벽히 반영할 수 있다.', strength: '뛰어난 해상도, 모듈식 유연성, 고급 광학' },
+            { name: 'Olympus Mju II', character: '매력적인 스트릿 뮤즈', oneline: '빠르면서도 품질 있는 당신의 일상', scores: { speed: 90, control: 40, emotion: 70, simplicity: 85, perfectionism: 70 }, description: '가장 완성된 point-and-shoot. 자동 초점, 자동 노출, 거의 생각할 필요 없다.', strength: '최고의 컴팩트 AF, f/2.8 빠른 렌즈, 방수 바디' },
+            { name: 'Pentax 67', character: '영화 같은 몽상가', oneline: '이야기를 담고 싶은 당신', scores: { speed: 40, control: 70, emotion: 90, simplicity: 35, perfectionism: 75 }, description: '파노라마처럼 넓은 6×7 포맷의 세상을 담는다. 당신의 각 프레임은 하나의 작은 영화다.', strength: '독특한 6×7 포맷, 대담한 광각, 감성적 깊이' },
+            { name: 'Canon AE-1', character: '혁신가', oneline: '기술과 창의의 경계를 탐구하는 당신', scores: { speed: 75, control: 65, emotion: 60, simplicity: 70, perfectionism: 60 }, description: '1970년대 혁신이 담긴 카메라. SLR의 대중화를 주도했다.', strength: '혁신적 설계, 빠른 작업 속도, 합리적 가격' },
+            { name: 'Contax T2', character: '세련된 미니멀리스트', oneline: '작지만 완벽한 것을 추구하는 당신', scores: { speed: 85, control: 70, emotion: 75, simplicity: 75, perfectionism: 85 }, description: '작은 것에 모든 것을 담았다. Zeiss 광학을 품은 컴팩트다.', strength: 'Zeiss Sonnar 광학, 세련된 디자인, 높은 휴대성' },
+            { name: 'Rolleiflex', character: '클래식 우아함', oneline: '역사 속의 미를 사랑하는 당신', scores: { speed: 55, control: 65, emotion: 75, simplicity: 65, perfectionism: 80 }, description: '1960년대 감성이 살아있다. 이중안 구조로 보는 세상은 다르다.', strength: '이중안 구조, 클래식 디자인, 온화한 톤' }
+        ];
+
+        let currentQuestion = 0;
+        let scores = { speed: 0, control: 0, emotion: 0, simplicity: 0, perfectionism: 0 };
+
+        function init() {
+            renderQuestion();
+            document.getElementById('restart-btn').addEventListener('click', restart);
+            document.getElementById('copy-btn').addEventListener('click', copyResultUrl);
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('question-text').textContent = q.q;
+            
+            const optionsHtml = [
+                { v: 1, text: `${q.left}` },
+                { v: 2, text: '상관없음' },
+                { v: 3, text: `${q.right}` }
+            ].map(opt => `<button class="answer-btn" onclick="handleAnswer(${opt.v})">${opt.text}</button>`).join('');
+            
+            document.getElementById('answer-options').innerHTML = optionsHtml;
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('progress-num').textContent = `${currentQuestion + 1} / ${questions.length}`;
+        }
+
+        function handleAnswer(value) {
+            const q = questions[currentQuestion];
+            const opposites = {
+                speed: 'perfectionism',
+                control: 'simplicity',
+                emotion: 'perfectionism',
+                simplicity: 'control',
+                perfectionism: 'control'
+            };
+
+            if (value === 1) {
+                scores[q.axis] += 50;
+            } else if (value === 3) {
+                const opp = opposites[q.axis];
+                if (opp) scores[opp] += 50;
+            }
+
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function getRecommendations() {
+            return cameras
+                .map(camera => {
+                    let distance = 0;
+                    Object.keys(scores).forEach(key => {
+                        distance += Math.abs(scores[key] - (camera.scores[key] || 0)) ** 2;
+                    });
+                    return { ...camera, distance: Math.sqrt(distance) };
+                })
+                .sort((a, b) => a.distance - b.distance)
+                .slice(0, 3);
+        }
+
+        function showResults() {
+            document.getElementById('quiz-section').style.display = 'none';
+            document.getElementById('results-section').classList.add('active');
+            
+            renderMap();
+            renderRecommendations();
+        }
+
+        function renderMap() {
+            const recommendations = getRecommendations();
+            const recommendedNames = new Set(recommendations.map(r => r.name));
+            
+            let mapHtml = `
+                <line x1="50" y1="270" x2="300" y2="270" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+                <line x1="50" y1="30" x2="50" y2="270" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+                <text x="175" y="295" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.5" font-weight="500">빠름 (Speed)</text>
+                <text x="15" y="145" text-anchor="middle" font-size="12" fill="currentColor" opacity="0.5" font-weight="500" transform="rotate(-90 15 145)">완벽성 (Perfect)</text>
+            `;
+
+            cameras.forEach(camera => {
+                const isRecommended = recommendedNames.has(camera.name);
+                const size = isRecommended ? 5.5 : 3.5;
+                const x = 50 + (camera.scores.speed / 100) * 250;
+                const y = 270 - (camera.scores.perfectionism / 100) * 240;
+                const fill = isRecommended ? '#3B82F6' : 'currentColor';
+                const opacity = isRecommended ? 1 : 0.4;
+
+                mapHtml += `<circle cx="${x}" cy="${y}" r="${size}" fill="${fill}" opacity="${opacity}"/>`;
+                if (isRecommended) {
+                    mapHtml += `<circle cx="${x}" cy="${y}" r="${size + 2}" fill="none" stroke="${fill}" stroke-width="1" opacity="0.2"/>`;
+                }
+            });
+
+            const userX = 50 + (scores.speed / 100) * 250;
+            const userY = 270 - (scores.perfectionism / 100) * 240;
+            mapHtml += `<circle cx="${userX}" cy="${userY}" r="6" fill="none" stroke="#3B82F6" stroke-width="2.5"/>`;
+            mapHtml += `<polygon points="${userX},${userY - 9} ${userX + 3.5},${userY - 2} ${userX - 3.5},${userY - 2}" fill="#3B82F6"/>`;
+
+            document.getElementById('map-svg').innerHTML = mapHtml;
+        }
+
+        function renderRecommendations() {
+            const recommendations = getRecommendations();
+            let html = '';
+
+            recommendations.forEach((camera, idx) => {
+                const badge = idx === 0 ? '🎯 최고의 매치' : idx === 1 ? '💫 좋은 대안' : '🌟 다른 선택지';
+                const borderClass = idx === 0 ? 'recommended' : '';
+
+                html += `
+                    <div class="camera-card ${borderClass}">
+                        <div class="camera-badge">${badge}</div>
+                        <div class="camera-name">${camera.name}</div>
+                        <div class="camera-character">${camera.character}</div>
+                        <div class="camera-oneline">"${camera.oneline}"</div>
+                        <div class="camera-description">${camera.description}</div>
+                        <div class="camera-strength"><strong>강점:</strong> ${camera.strength}</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('recommendations').innerHTML = html;
+        }
+
+        function copyResultUrl() {
+            const resultData = JSON.stringify(scores);
+            const encoded = encodeURIComponent(resultData);
+            const url = window.location.href.split('?')[0] + `?result=${encoded}`;
+
+            navigator.clipboard.writeText(url).then(() => {
+                const notification = document.getElementById('notification');
+                notification.classList.add('show');
+                setTimeout(() => notification.classList.remove('show'), 2000);
+            });
+        }
+
+        function restart() {
+            currentQuestion = 0;
+            scores = { speed: 0, control: 0, emotion: 0, simplicity: 0, perfectionism: 0 };
+            document.getElementById('quiz-section').style.display = 'block';
+            document.getElementById('results-section').classList.remove('active');
+            renderQuestion();
+        }
+
+        init();
+    </script>
+</body>
+</html>
